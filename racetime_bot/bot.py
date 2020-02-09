@@ -26,12 +26,14 @@ class Bot:
     scan_races_every = timedelta(seconds=30)
     gather_tasks_every = timedelta(seconds=30)
 
-    def __init__(self, category_slug, client_id, client_secret, logger):
+    def __init__(self, category_slug, client_id, client_secret, logger,
+                 ssl_context=None):
         """
         Bot constructor.
         """
         self.logger = logger
         self.category_slug = category_slug
+        self.ssl_context = ssl_context
 
         self.loop = asyncio.get_event_loop()
         self.last_scan = None
@@ -94,6 +96,7 @@ class Bot:
             extra_headers={
                 'Authorization': 'Bearer ' + self.access_token,
             },
+            ssl=self.ssl_context,
         )
 
         cls = self.get_handler_class()
