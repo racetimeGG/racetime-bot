@@ -1,6 +1,5 @@
 import asyncio
 import json
-from datetime import timedelta
 from functools import partial
 
 import requests
@@ -23,9 +22,9 @@ class Bot:
     """
     racetime_host = 'racetime.gg'
     racetime_secure = True
-    scan_races_every = timedelta(seconds=30)
-    gather_tasks_every = timedelta(seconds=30)
-    reauthorize_every = timedelta(seconds=36000)
+    scan_races_every = 30
+    gather_tasks_every = 30
+    reauthorize_every = 36000
 
     def __init__(self, category_slug, client_id, client_secret, logger,
                  ssl_context=None):
@@ -125,7 +124,7 @@ class Bot:
         while True:
             self.logger.info('Get new access token')
             self.access_token, self.reauthorize_every = self.authorize()
-            delay = self.reauthorize_every.seconds
+            delay = self.reauthorize_every
             if delay > 600:
                 # Get a token a bit earlier so that we don't get caught out by
                 # expiry.
@@ -147,7 +146,7 @@ class Bot:
             self.races = {}
             for race in data.get('current_races', []):
                 self.races[race.get('name')] = race
-            await asyncio.sleep(self.scan_races_every.seconds)
+            await asyncio.sleep(self.scan_races_every)
 
     async def gather_tasks(self):
         """
@@ -179,7 +178,7 @@ class Bot:
                             'Ignoring %(race)s by configuration.'
                             % {'race': race_data.get('name')}
                         )
-            await asyncio.sleep(self.gather_tasks_every.seconds)
+            await asyncio.sleep(self.gather_tasks_every)
 
     def run(self):
         """
