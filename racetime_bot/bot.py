@@ -69,7 +69,8 @@ class Bot:
         Returns True if the race should have a handler created for it, False
         otherwise.
         """
-        return race_data.get('status', {}).get('value') not in RaceHandler.stop_at
+        status = race_data.get('status', {}).get('value')
+        return status not in self.get_handler_class().stop_at
 
     def authorize(self, client_id, client_secret):
         """

@@ -96,7 +96,7 @@ class RaceHandler:
             self.logger.info('Ignoring bot/system message.')
             return
 
-        words = message.get('message', '').split(' ')
+        words = message.get('message', '').lower().split(' ')
         if words and words[0][0] == '!':
             method = 'ex_' + words[0][1:]
             args = words[1:]
