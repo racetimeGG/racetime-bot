@@ -17,7 +17,7 @@ setup(
     project_urls={
         'Source': 'https://github.com/deains/racetime-bot',
     },
-    version='1.0.1',
+    version='1.1.0',
     install_requires=[
         'asgiref',
         'requests',
