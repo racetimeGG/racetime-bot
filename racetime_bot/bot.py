@@ -25,6 +25,7 @@ class Bot:
     racetime_secure = True
     scan_races_every = timedelta(seconds=30)
     gather_tasks_every = timedelta(seconds=30)
+    reauthorize_every = timedelta(seconds=36000)
 
     def __init__(self, category_slug, client_id, client_secret, logger,
                  ssl_context=None):
@@ -40,7 +41,9 @@ class Bot:
         self.races = {}
         self.handlers = {}
 
-        self.access_token = self.authorize(client_id, client_secret)
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.access_token, self.reauthorize_every = self.authorize()
 
     def get_handler_class(self):
         """
@@ -72,20 +75,19 @@ class Bot:
         status = race_data.get('status', {}).get('value')
         return status not in self.get_handler_class().stop_at
 
-    def authorize(self, client_id, client_secret):
+    def authorize(self):
         """
         Get an OAuth2 token from the authentication server.
         """
         resp = requests.post(self.http_uri('/o/token'), {
-            'client_id': client_id,
-            'client_secret': client_secret,
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
             'grant_type': 'client_credentials',
         })
         data = json.loads(resp.content)
-        token = data.get('access_token')
-        if not token:
+        if not data.get('access_token'):
             raise Exception('Unable to retrieve access token.')
-        return token
+        return data.get('access_token'), data.get('expires_in', 36000)
 
     def create_handler(self, race_data):
         """
@@ -112,35 +114,23 @@ class Bot:
 
         return handler
 
-    async def gather_tasks(self):
+    async def reauthorize(self):
         """
-        Examines the current races, and creates a handler and task for any race
-        that should be handled but currently isn't.
+        Reauthorize with the token endpoint, to generate a new access token
+        before the current one expires.
 
-        This method runs in a constant loop, checking for new races every few
-        seconds.
+        This method runs in a constant loop, creating a new access token when
+        needed.
         """
-        tasks = {}
-
-        def done(task_name, *args):
-            del tasks[task_name]
-
         while True:
-            for name, summary_data in self.races.items():
-                if name not in tasks:
-                    resp = requests.get(self.http_uri(summary_data.get('data_url')))
-                    race_data = json.loads(resp.content)
-                    if self.should_handle(race_data):
-                        handler = self.create_handler(race_data)
-                        tasks[name] = self.loop.create_task(handler.handle())
-                        tasks[name].add_done_callback(partial(done, name))
-                        self.logger.debug(tasks[name])
-                    else:
-                        self.logger.info(
-                            'Ignoring %(race)s by configuration.'
-                            % {'race': race_data.get('name')}
-                        )
-            await asyncio.sleep(self.gather_tasks_every.seconds)
+            self.logger.info('Get new access token')
+            self.access_token, self.reauthorize_every = self.authorize()
+            delay = self.reauthorize_every.seconds
+            if delay > 600:
+                # Get a token a bit earlier so that we don't get caught out by
+                # expiry.
+                delay -= 600
+            await asyncio.sleep(delay)
 
     async def refresh_races(self):
         """
@@ -159,10 +149,43 @@ class Bot:
                 self.races[race.get('name')] = race
             await asyncio.sleep(self.scan_races_every.seconds)
 
+    async def gather_tasks(self):
+        """
+        Examines the current races, and creates a handler and task for any race
+        that should be handled but currently isn't.
+
+        This method runs in a constant loop, checking for new races every few
+        seconds.
+        """
+        tasks = {}
+
+        def done(task_name, *args):
+            del tasks[task_name]
+
+        while True:
+            for name, summary_data in self.races.items():
+                if name not in tasks:
+                    resp = requests.get(
+                        self.http_uri(summary_data.get('data_url'))
+                    )
+                    race_data = json.loads(resp.content)
+                    if self.should_handle(race_data):
+                        handler = self.create_handler(race_data)
+                        tasks[name] = self.loop.create_task(handler.handle())
+                        tasks[name].add_done_callback(partial(done, name))
+                        self.logger.debug(tasks[name])
+                    else:
+                        self.logger.info(
+                            'Ignoring %(race)s by configuration.'
+                            % {'race': race_data.get('name')}
+                        )
+            await asyncio.sleep(self.gather_tasks_every.seconds)
+
     def run(self):
         """
         Run the bot. Creates an event loop then iterates over it forever.
         """
+        self.loop.create_task(self.reauthorize())
         self.loop.create_task(self.refresh_races())
         self.loop.create_task(self.gather_tasks())
         self.logger.info('Running event loop')
