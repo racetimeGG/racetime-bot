@@ -37,8 +37,9 @@ class Bot:
 
         self.loop = asyncio.get_event_loop()
         self.last_scan = None
-        self.races = {}
         self.handlers = {}
+        self.races = {}
+        self.state = {}
 
         self.client_id = client_id
         self.client_secret = client_secret
@@ -51,7 +52,7 @@ class Bot:
         """
         return RaceHandler
 
-    def get_handler_kwargs(self, ws_conn):
+    def get_handler_kwargs(self, ws_conn, state):
         """
         Returns a dict of keyword arguments to be passed into the handler class
         when instantiated.
@@ -60,8 +61,9 @@ class Bot:
         handler.
         """
         return {
-            'logger': self.logger,
             'conn': ws_conn,
+            'logger': self.logger,
+            'state': state,
         }
 
     def should_handle(self, race_data):
@@ -101,8 +103,12 @@ class Bot:
             ssl=self.ssl_context,
         )
 
+        race_name = race_data.get('name')
+        if race_name not in self.state:
+            self.state[race_name] = {}
+
         cls = self.get_handler_class()
-        kwargs = self.get_handler_kwargs(ws_conn)
+        kwargs = self.get_handler_kwargs(ws_conn, self.state[race_name])
 
         handler = cls(**kwargs)
 
@@ -174,6 +180,8 @@ class Bot:
                         tasks[name].add_done_callback(partial(done, name))
                         self.logger.debug(tasks[name])
                     else:
+                        if name in self.state:
+                            del self.state[name]
                         self.logger.info(
                             'Ignoring %(race)s by configuration.'
                             % {'race': race_data.get('name')}

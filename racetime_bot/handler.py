@@ -13,16 +13,29 @@ class RaceHandler:
     # This is used by `should_stop` to determine when the handler should quit.
     stop_at = ['cancelled', 'finished']
 
-    def __init__(self, logger, conn):
+    def __init__(self, logger, conn, state):
         """
-        Base handler setup.
+        Base handler constructor.
 
-        Adds the logger, WebSocket connector and prepares some variables.
+        Sets up the following attributes:
+        * conn - WebSocket connection, used internally.
+        * data - Race data dict, as retrieved from race detail API endpoint.
+        * logger - The logger instance bot was instantiated with.
+        * state - A dict of stateful data for this race
+        * ws - The open WebSocket, used internally.
+
+        About data vs state - data is the race information retrieved from the
+        server and can be read by your handler, but should not be written to.
+        The state on the other hand can be used by your handler to preserve
+        information about the race. It is preserved even if the handler is
+        recreated (e.g. due to disconnect). Use it for any information you
+        want.
         """
-        self.logger = logger
         self.conn = conn
-        self.ws = None
         self.data = {}
+        self.logger = logger
+        self.state = state
+        self.ws = None
 
     def should_stop(self):
         """
