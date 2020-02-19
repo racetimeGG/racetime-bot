@@ -23,8 +23,12 @@ class Bot:
     racetime_host = 'racetime.gg'
     racetime_secure = True
     scan_races_every = 30
-    gather_tasks_every = 30
     reauthorize_every = 36000
+
+    continue_on = [
+        # Exception types that will not cause the bot to shut down.
+        websockets.ConnectionClosed,
+    ]
 
     def __init__(self, category_slug, client_id, client_secret, logger,
                  ssl_context=None):
@@ -140,11 +144,15 @@ class Bot:
     async def refresh_races(self):
         """
         Retrieve current race information from the category detail API
-        endpoint, and populate the race list.
+        endpoint, retrieving the current race list. Creates a handler and task
+        for any race that should be handled but currently isn't.
 
         This method runs in a constant loop, checking for new races every few
         seconds.
         """
+        def done(task_name, *args):
+            del self.handlers[task_name]
+
         while True:
             self.logger.info('Refresh races')
             resp = requests.get(self.http_uri(f'/{self.category_slug}/data'))
@@ -152,33 +160,17 @@ class Bot:
             self.races = {}
             for race in data.get('current_races', []):
                 self.races[race.get('name')] = race
-            await asyncio.sleep(self.scan_races_every)
 
-    async def gather_tasks(self):
-        """
-        Examines the current races, and creates a handler and task for any race
-        that should be handled but currently isn't.
-
-        This method runs in a constant loop, checking for new races every few
-        seconds.
-        """
-        tasks = {}
-
-        def done(task_name, *args):
-            del tasks[task_name]
-
-        while True:
             for name, summary_data in self.races.items():
-                if name not in tasks:
+                if name not in self.handlers:
                     resp = requests.get(
                         self.http_uri(summary_data.get('data_url'))
                     )
                     race_data = json.loads(resp.content)
                     if self.should_handle(race_data):
                         handler = self.create_handler(race_data)
-                        tasks[name] = self.loop.create_task(handler.handle())
-                        tasks[name].add_done_callback(partial(done, name))
-                        self.logger.debug(tasks[name])
+                        self.handlers[name] = self.loop.create_task(handler.handle())
+                        self.handlers[name].add_done_callback(partial(done, name))
                     else:
                         if name in self.state:
                             del self.state[name]
@@ -186,7 +178,20 @@ class Bot:
                             'Ignoring %(race)s by configuration.'
                             % {'race': race_data.get('name')}
                         )
-            await asyncio.sleep(self.gather_tasks_every)
+
+            await asyncio.sleep(self.scan_races_every)
+
+    def handle_exception(self, loop, context):
+        """
+        Handle exceptions that occur during the event loop.
+        """
+        self.logger.error(context)
+        exception = context.get('exception')
+        if exception:
+            self.logger.exception(context)
+
+        if not exception or exception.__class__ not in self.continue_on:
+            loop.stop()
 
     def run(self):
         """
@@ -194,8 +199,7 @@ class Bot:
         """
         self.loop.create_task(self.reauthorize())
         self.loop.create_task(self.refresh_races())
-        self.loop.create_task(self.gather_tasks())
-        self.logger.info('Running event loop')
+        self.loop.set_exception_handler(self.handle_exception)
         self.loop.run_forever()
 
     def http_uri(self, url):
