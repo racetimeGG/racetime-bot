@@ -1,6 +1,6 @@
 # racetime-bot
 
-[![Discord](https://discordapp.com/api/guilds/660452709044060171/embed.png?style=shield)](https://discord.gg/65cvHG3)
+[![Discord](https://discordapp.com/api/guilds/660452709044060171/embed.png?style=shield)](https://discord.racetime.gg)
 
 A Python library to help you create chat bots for
 [racetime.gg](https://racetime.gg).
