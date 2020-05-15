@@ -13,9 +13,9 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
-    url='https://github.com/deains/racetime-bot',
+    url='https://github.com/racetimeGG/racetime-bot',
     project_urls={
-        'Source': 'https://github.com/deains/racetime-bot',
+        'Source': 'https://github.com/racetimeGG/racetime-bot',
     },
     version='1.3.0',
     install_requires=[
