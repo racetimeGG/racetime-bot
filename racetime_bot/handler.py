@@ -13,7 +13,7 @@ class RaceHandler:
     # This is used by `should_stop` to determine when the handler should quit.
     stop_at = ['cancelled', 'finished']
 
-    def __init__(self, logger, conn, state):
+    def __init__(self, logger, conn, state, command_prefix='!'):
         """
         Base handler constructor.
 
@@ -35,6 +35,7 @@ class RaceHandler:
         self.data = {}
         self.logger = logger
         self.state = state
+        self.command_prefix = command_prefix
         self.ws = None
 
     def should_stop(self):
@@ -110,8 +111,8 @@ class RaceHandler:
             return
 
         words = message.get('message', '').lower().split(' ')
-        if words and words[0][0] == '!':
-            method = 'ex_' + words[0][1:]
+        if words and words[0].startswith(self.command_prefix.lower()):
+            method = 'ex_' + words[0][len(self.command_prefix):]
             args = words[1:]
             if hasattr(self, method):
                 self.logger.info('[%(race)s] Calling handler for %(word)s' % {
