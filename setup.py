@@ -20,6 +20,7 @@ setup(
     version='1.3.0',
     install_requires=[
         'asgiref',
+        'aiohttp',
         'requests',
         'websockets',
     ],

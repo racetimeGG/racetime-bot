@@ -2,6 +2,7 @@ import asyncio
 import json
 from functools import partial
 
+import aiohttp
 import requests
 import websockets
 
@@ -68,6 +69,7 @@ class Bot:
             'conn': ws_conn,
             'logger': self.logger,
             'state': state,
+            'command_prefix': '!',
         }
 
     def should_handle(self, race_data):
@@ -155,18 +157,22 @@ class Bot:
 
         while True:
             self.logger.info('Refresh races')
-            resp = requests.get(self.http_uri(f'/{self.category_slug}/data'))
-            data = json.loads(resp.content)
+            async with aiohttp.request(
+                    method='get',
+                    url=self.http_uri(f'/{self.category_slug}/data')
+            ) as resp:
+                data = json.loads(await resp.read())
             self.races = {}
             for race in data.get('current_races', []):
                 self.races[race.get('name')] = race
 
             for name, summary_data in self.races.items():
                 if name not in self.handlers:
-                    resp = requests.get(
-                        self.http_uri(summary_data.get('data_url'))
-                    )
-                    race_data = json.loads(resp.content)
+                    async with aiohttp.request(
+                            method='get',
+                            url=self.http_uri(summary_data.get('data_url'))
+                    ) as resp:
+                        race_data = json.loads(await resp.read())
                     if self.should_handle(race_data):
                         handler = self.create_handler(race_data)
                         self.handlers[name] = self.loop.create_task(handler.handle())
