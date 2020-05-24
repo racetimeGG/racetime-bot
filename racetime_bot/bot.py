@@ -157,22 +157,32 @@ class Bot:
 
         while True:
             self.logger.info('Refresh races')
-            async with aiohttp.request(
-                    method='get',
-                    url=self.http_uri(f'/{self.category_slug}/data')
-            ) as resp:
-                data = json.loads(await resp.read())
+            try:
+                async with aiohttp.request(
+                        method='get',
+                        url=self.http_uri(f'/{self.category_slug}/data')
+                ) as resp:
+                    data = json.loads(await resp.read())
+            except Exception:
+                self.logger.error("Fatal error when attempting to retrieve race data.", exc_info=True)
+                await asyncio.sleep(self.scan_races_every)
+                continue
             self.races = {}
             for race in data.get('current_races', []):
                 self.races[race.get('name')] = race
 
             for name, summary_data in self.races.items():
                 if name not in self.handlers:
-                    async with aiohttp.request(
-                            method='get',
-                            url=self.http_uri(summary_data.get('data_url'))
-                    ) as resp:
-                        race_data = json.loads(await resp.read())
+                    try:
+                        async with aiohttp.request(
+                                method='get',
+                                url=self.http_uri(summary_data.get('data_url'))
+                        ) as resp:
+                            race_data = json.loads(await resp.read())
+                    except Exception:
+                        self.logger.error("Fatal error when attempting to retrieve race summary data.", exc_info=True)
+                        await asyncio.sleep(self.scan_races_every)
+                        continue
                     if self.should_handle(race_data):
                         handler = self.create_handler(race_data)
                         self.handlers[name] = self.loop.create_task(handler.handle())
