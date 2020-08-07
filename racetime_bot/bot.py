@@ -91,6 +91,7 @@ class Bot:
             'client_secret': self.client_secret,
             'grant_type': 'client_credentials',
         })
+        resp.raise_for_status()
         data = json.loads(resp.content)
         if not data.get('access_token'):
             raise Exception('Unable to retrieve access token.')
@@ -164,7 +165,8 @@ class Bot:
                 ) as resp:
                     data = json.loads(await resp.read())
             except Exception:
-                self.logger.error("Fatal error when attempting to retrieve race data.", exc_info=True)
+                self.logger.error(
+                    "Fatal error when attempting to retrieve race data.", exc_info=True)
                 await asyncio.sleep(self.scan_races_every)
                 continue
             self.races = {}
@@ -180,13 +182,16 @@ class Bot:
                         ) as resp:
                             race_data = json.loads(await resp.read())
                     except Exception:
-                        self.logger.error("Fatal error when attempting to retrieve race summary data.", exc_info=True)
+                        self.logger.error(
+                            "Fatal error when attempting to retrieve race summary data.", exc_info=True)
                         await asyncio.sleep(self.scan_races_every)
                         continue
                     if self.should_handle(race_data):
                         handler = self.create_handler(race_data)
-                        self.handlers[name] = self.loop.create_task(handler.handle())
-                        self.handlers[name].add_done_callback(partial(done, name))
+                        self.handlers[name] = self.loop.create_task(
+                            handler.handle())
+                        self.handlers[name].add_done_callback(
+                            partial(done, name))
                     else:
                         if name in self.state:
                             del self.state[name]
