@@ -258,7 +258,7 @@ class RaceHandler:
         `user` should be the hashid of the user.
         """
         await self.ws.send(json.dumps({
-            'action': 'cancel',
+            'action': 'force_unready',
             "data": {
                 "user": user
             }
@@ -275,7 +275,7 @@ class RaceHandler:
         `user` should be the hashid of the user.
         """
         await self.ws.send(json.dumps({
-            'action': 'cancel',
+            'action': 'remove_entrant',
             "data": {
                 "user": user
             }
