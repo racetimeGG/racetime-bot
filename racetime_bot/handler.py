@@ -241,7 +241,7 @@ class RaceHandler:
         `user` should be the hashid of the user.
         """
         await self.ws.send(json.dumps({
-            'action': 'invite',
+            'action': 'accept_request',
             "data": {
                 "user": user
             }
