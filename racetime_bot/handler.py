@@ -173,6 +173,152 @@ class RaceHandler:
             'info': info,
         })
 
+    async def set_open(self):
+        """
+        Set the room in an open state.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'make_open'
+        }))
+        self.logger.info('[%(race)s] Make open' % {
+            'race': self.data.get('name')
+        })
+
+    async def set_invitational(self):
+        """
+        Set the room in an invite-only state.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'make_invitational'
+        }))
+        self.logger.info('[%(race)s] Make invitational' % {
+            'race': self.data.get('name')
+        })
+
+    async def force_start(self):
+        """
+        Forces a start of the race.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'begin'
+        }))
+        self.logger.info('[%(race)s] Forced start' % {
+            'race': self.data.get('name')
+        })
+
+    async def cancel_race(self):
+        """
+        Forcibly cancels a race.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'cancel'
+        }))
+        self.logger.info('[%(race)s] cancelled' % {
+            'race': self.data.get('name')
+        })
+
+    async def invite_user(self, user):
+        """
+        Invites a user to the race.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'invite',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] invited %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
+    async def accept_request(self, user):
+        """
+        Accepts a request to join the race room.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'invite',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] accept join request %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
+    async def force_unready(self, user):
+        """
+        Forcibly unreadies an entrant.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'cancel',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] force unready %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
+    async def remove_entrant(self, user):
+        """
+        Forcibly removes an entrant from the race.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'cancel',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] removed entrant %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
+    async def add_monitor(self, user):
+        """
+        Adds a user as a race monitor.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'add_monitor',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] added race monitor %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
+    async def remove_monitor(self, user):
+        """
+        Removes a user as a race monitor.
+
+        `user` should be the hashid of the user.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'remove_monitor',
+            "data": {
+                "user": user
+            }
+        }))
+        self.logger.info('[%(race)s] added race monitor %(user)s' % {
+            'race': self.data.get('name'),
+            'user': user
+        })
+
     async def handle(self):
         """
         Low-level handler for the race room. This will loop over the websocket,
