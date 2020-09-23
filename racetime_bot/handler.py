@@ -225,8 +225,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'invite',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] invited %(user)s' % {
@@ -242,8 +242,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'accept_request',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] accept join request %(user)s' % {
@@ -259,8 +259,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'force_unready',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] force unready %(user)s' % {
@@ -276,8 +276,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'remove_entrant',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] removed entrant %(user)s' % {
@@ -293,8 +293,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'add_monitor',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] added race monitor %(user)s' % {
@@ -310,8 +310,8 @@ class RaceHandler:
         """
         await self.ws.send(json.dumps({
             'action': 'remove_monitor',
-            "data": {
-                "user": user
+            'data': {
+                'user': user
             }
         }))
         self.logger.info('[%(race)s] added race monitor %(user)s' % {
