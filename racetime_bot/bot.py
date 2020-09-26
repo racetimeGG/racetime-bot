@@ -191,10 +191,8 @@ class Bot:
                         continue
                     if self.should_handle(race_data):
                         handler = self.create_handler(race_data)
-                        self.handlers[name] = self.loop.create_task(
-                            handler.handle())
-                        self.handlers[name].add_done_callback(
-                            partial(done, name))
+                        self.handlers[name] = self.loop.create_task(handler.handle())
+                        self.handlers[name].add_done_callback(partial(done, name))
                     else:
                         if name in self.state:
                             del self.state[name]
