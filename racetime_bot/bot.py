@@ -179,8 +179,7 @@ class Bot:
                     try:
                         async with aiohttp.request(
                                 method='get',
-                                url=self.http_uri(
-                                    summary_data.get('data_url')),
+                                url=self.http_uri(summary_data.get('data_url')),
                                 raise_for_status=True
                         ) as resp:
                             race_data = json.loads(await resp.read())
