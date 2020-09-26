@@ -183,8 +183,7 @@ class Bot:
                         ) as resp:
                             race_data = json.loads(await resp.read())
                     except Exception:
-                        self.logger.error(
-                            "Fatal error when attempting to retrieve race summary data.", exc_info=True)
+                        self.logger.error('Fatal error when attempting to retrieve race data.', exc_info=True)
                         await asyncio.sleep(self.scan_races_every)
                         continue
                     if self.should_handle(race_data):
