@@ -160,9 +160,9 @@ class Bot:
             self.logger.info('Refresh races')
             try:
                 async with aiohttp.request(
-                        method='get',
-                        url=self.http_uri(f'/{self.category_slug}/data'),
-                        raise_for_status=True
+                    method='get',
+                    url=self.http_uri(f'/{self.category_slug}/data'),
+                    raise_for_status=True,
                 ) as resp:
                     data = json.loads(await resp.read())
             except Exception:
@@ -177,9 +177,9 @@ class Bot:
                 if name not in self.handlers:
                     try:
                         async with aiohttp.request(
-                                method='get',
-                                url=self.http_uri(summary_data.get('data_url')),
-                                raise_for_status=True
+                            method='get',
+                            url=self.http_uri(summary_data.get('data_url')),
+                            raise_for_status=True,
                         ) as resp:
                             race_data = json.loads(await resp.read())
                     except Exception:
