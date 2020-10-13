@@ -67,7 +67,7 @@ class RaceHandler:
         """
         msg_type = data.get('type')
 
-        self.logger.info('[%(race)s] Recieved %(msg_type)s' % {
+        self.logger.info('[%(race)s] Received %(msg_type)s' % {
             'race': self.data.get('name'),
             'msg_type': msg_type,
         })
