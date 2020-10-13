@@ -119,7 +119,11 @@ class RaceHandler:
                     'race': self.data.get('name'),
                     'word': words[0],
                 })
-                await getattr(self, method)(args, message)
+                try:
+                    await getattr(self, method)(args, message)
+                except Exception as e:
+                    self.logger.error('Command raised exception.', exc_info=True)
+
 
     async def race_data(self, data):
         """
