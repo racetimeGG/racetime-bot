@@ -106,7 +106,7 @@ class Bot:
             extra_headers={
                 'Authorization': 'Bearer ' + self.access_token,
             },
-            ssl=self.ssl_context if self.ssl_context is not None else True,
+            ssl=self.ssl_context if self.ssl_context is not None else self.racetime_secure,
         )
 
         race_name = race_data.get('name')
