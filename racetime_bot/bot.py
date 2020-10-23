@@ -135,14 +135,14 @@ class Bot:
         needed.
         """
         while True:
-            self.logger.info('Get new access token')
-            self.access_token, self.reauthorize_every = self.authorize()
             delay = self.reauthorize_every
             if delay > 600:
                 # Get a token a bit earlier so that we don't get caught out by
                 # expiry.
                 delay -= 600
             await asyncio.sleep(delay)
+            self.logger.info('Get new access token')
+            self.access_token, self.reauthorize_every = self.authorize()
 
     async def refresh_races(self):
         """
