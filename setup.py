@@ -17,7 +17,7 @@ setup(
     project_urls={
         'Source': 'https://github.com/racetimeGG/racetime-bot',
     },
-    version='1.7.0',
+    version='1.7.1',
     install_requires=[
         'aiohttp',
         'asgiref',
