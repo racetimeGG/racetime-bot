@@ -29,6 +29,8 @@ class Bot:
     continue_on = [
         # Exception types that will not cause the bot to shut down.
         websockets.ConnectionClosed,
+        websockets.ConnectionClosedOK,
+        websockets.ConnectionClosedError,
     ]
 
     def __init__(self, category_slug, client_id, client_secret, logger,
@@ -135,14 +137,11 @@ class Bot:
         needed.
         """
         while True:
+            # Divide the reauthorization interval by 2 to avoid token expiration
+            delay = self.reauthorize_every / 2
+            await asyncio.sleep(delay)
             self.logger.info('Get new access token')
             self.access_token, self.reauthorize_every = self.authorize()
-            delay = self.reauthorize_every
-            if delay > 600:
-                # Get a token a bit earlier so that we don't get caught out by
-                # expiry.
-                delay -= 600
-            await asyncio.sleep(delay)
 
     async def refresh_races(self):
         """
