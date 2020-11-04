@@ -104,12 +104,16 @@ class Bot:
         Create a new WebSocket connection and set up a handler object to manage
         it.
         """
-        ws_conn = websockets.connect(
-            self.ws_uri(race_data.get('websocket_bot_url')),
-            extra_headers={
+        connect_kwargs = {
+            'extra_headers': {
                 'Authorization': 'Bearer ' + self.access_token,
             },
-            ssl=self.ssl_context if self.ssl_context is not None else self.racetime_secure,
+        }
+        if self.ssl_context is not None and self.racetime_secure:
+            connect_kwargs['ssl'] = self.ssl_context
+        ws_conn = websockets.connect(
+            self.ws_uri(race_data.get('websocket_bot_url')),
+            **connect_kwargs,
         )
 
         race_name = race_data.get('name')
