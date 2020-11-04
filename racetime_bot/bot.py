@@ -124,6 +124,7 @@ class Bot:
         kwargs = self.get_handler_kwargs(ws_conn, self.state[race_name])
 
         handler = cls(**kwargs)
+        handler.data = race_data
 
         self.logger.info(
             'Created handler for %(race)s'
