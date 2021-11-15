@@ -3,8 +3,6 @@ import json
 from functools import partial
 
 import aiohttp
-import requests
-import websockets
 
 from .handler import RaceHandler
 
@@ -28,9 +26,9 @@ class Bot:
 
     continue_on = [
         # Exception types that will not cause the bot to shut down.
-        websockets.ConnectionClosed,
-        websockets.ConnectionClosedOK,
-        websockets.ConnectionClosedError,
+        # websockets.ConnectionClosed,
+        # websockets.ConnectionClosedOK,
+        # websockets.ConnectionClosedError,
     ]
 
     def __init__(self, category_slug, client_id, client_secret, logger,
@@ -50,7 +48,7 @@ class Bot:
 
         self.client_id = client_id
         self.client_secret = client_secret
-        self.access_token, self.reauthorize_every = self.authorize()
+        self.http = aiohttp.ClientSession(raise_for_status=True)
 
     def get_handler_class(self):
         """
@@ -84,34 +82,33 @@ class Bot:
         status = race_data.get('status', {}).get('value')
         return status not in self.get_handler_class().stop_at
 
-    def authorize(self):
+    async def authorize(self):
         """
         Get an OAuth2 token from the authentication server.
         """
-        resp = requests.post(self.http_uri('/o/token'), {
+        async with self.http.post(self.http_uri('/o/token'), data={
             'client_id': self.client_id,
             'client_secret': self.client_secret,
             'grant_type': 'client_credentials',
-        })
-        resp.raise_for_status()
-        data = json.loads(resp.content)
-        if not data.get('access_token'):
-            raise Exception('Unable to retrieve access token.')
-        return data.get('access_token'), data.get('expires_in', 36000)
+        }, ssl=self.ssl_context) as resp:
+            data = await resp.json()
+            if not data.get('access_token'):
+                raise Exception('Unable to retrieve access token.')
+            return data.get('access_token'), data.get('expires_in', 36000)
 
-    def create_handler(self, race_data):
+    async def create_handler(self, race_data):
         """
         Create a new WebSocket connection and set up a handler object to manage
         it.
         """
         connect_kwargs = {
-            'extra_headers': {
+            'headers': {
                 'Authorization': 'Bearer ' + self.access_token,
             },
         }
         if self.ssl_context is not None and self.racetime_secure:
             connect_kwargs['ssl'] = self.ssl_context
-        ws_conn = websockets.connect(
+        ws_conn = await self.http.ws_connect(
             self.ws_uri(race_data.get('websocket_bot_url')),
             **connect_kwargs,
         )
@@ -146,7 +143,7 @@ class Bot:
             delay = self.reauthorize_every / 2
             await asyncio.sleep(delay)
             self.logger.info('Get new access token')
-            self.access_token, self.reauthorize_every = self.authorize()
+            self.access_token, self.reauthorize_every = await self.authorize()
 
     async def refresh_races(self):
         """
@@ -163,10 +160,8 @@ class Bot:
         while True:
             self.logger.info('Refresh races')
             try:
-                async with aiohttp.request(
-                    method='get',
-                    url=self.http_uri(f'/{self.category_slug}/data'),
-                    raise_for_status=True,
+                async with self.http.get(
+                    self.http_uri(f'/{self.category_slug}/data')
                 ) as resp:
                     data = json.loads(await resp.read())
             except Exception:
@@ -180,10 +175,8 @@ class Bot:
             for name, summary_data in self.races.items():
                 if name not in self.handlers:
                     try:
-                        async with aiohttp.request(
-                            method='get',
-                            url=self.http_uri(summary_data.get('data_url')),
-                            raise_for_status=True,
+                        async with self.http.get(
+                            self.http_uri(summary_data.get('data_url'))
                         ) as resp:
                             race_data = json.loads(await resp.read())
                     except Exception:
@@ -191,7 +184,7 @@ class Bot:
                         await asyncio.sleep(self.scan_races_every)
                         continue
                     if self.should_handle(race_data):
-                        handler = self.create_handler(race_data)
+                        handler = await self.create_handler(race_data)
                         self.handlers[name] = self.loop.create_task(handler.handle())
                         self.handlers[name].add_done_callback(partial(done, name))
                     else:
