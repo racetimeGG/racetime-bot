@@ -26,9 +26,7 @@ class Bot:
 
     continue_on = [
         # Exception types that will not cause the bot to shut down.
-        # websockets.ConnectionClosed,
-        # websockets.ConnectionClosedOK,
-        # websockets.ConnectionClosedError,
+        aiohttp.ClientError,
     ]
 
     def __init__(self, category_slug, client_id, client_secret, logger,
