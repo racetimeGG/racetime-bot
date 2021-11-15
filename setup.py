@@ -20,9 +20,6 @@ setup(
     version='1.8.0',
     install_requires=[
         'aiohttp',
-        'asgiref',
-        'requests',
-        'websockets',
     ],
     packages=find_packages(),
 )
