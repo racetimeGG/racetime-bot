@@ -153,26 +153,42 @@ class RaceHandler:
             'message': message,
         })
 
+    async def set_bot_raceinfo(self, info):
+        """
+        Set the `info_bot` field on the race room's data.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'setinfo',
+            'data': {'info_bot': info}
+        }))
+
+        self.logger.info('[%(race)s] Set info: "%(info)s"' % {
+            'race': self.data.get('name'),
+            'info': info,
+        })
+
     async def set_raceinfo(self, info, overwrite=False, prefix=True):
         """
-        Set the `info` field on the race room's data.
+        Set the `info_user` field on the race room's data.
+
+        This method is deprecated, please switch to using `set_bot_raceinfo`.
 
         `info` should be the information you wish to set. By default, this
         method will prefix your information with the existing info, if needed.
         You can change this to suffix with `prefix=False`, or disable this
         behaviour entirely with `overwrite=True`.
         """
-        if self.data.get('info') and not overwrite:
+        if self.data.get('info_user') and not overwrite:
             if prefix:
-                info = info + ' | ' + self.data.get('info')
+                info = info + ' | ' + self.data.get('info_user')
             else:
-                info = self.data.get('info') + ' | ' + info
+                info = self.data.get('info_user') + ' | ' + info
 
         await self.ws.send(json.dumps({
             'action': 'setinfo',
-            'data': {'info': info}
+            'data': {'info_user': info}
         }))
-        self.logger.info('[%(race)s] Set info: "%(info)s"' % {
+        self.logger.info('[%(race)s] [Deprecated] Set info: "%(info)s"' % {
             'race': self.data.get('name'),
             'info': info,
         })
