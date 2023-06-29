@@ -38,7 +38,7 @@ class RaceHandler:
         self.command_prefix = command_prefix
         self.ws = None
 
-    def should_stop(self):
+    async def should_stop(self):
         """
         Determine if the handler should be terminated. This is checked after
         every receieved message.
@@ -349,10 +349,12 @@ class RaceHandler:
         })
         async with self.conn as ws:
             self.ws = ws
+            if await self.should_stop():
+                return
             await self.begin()
             async for message in self.ws:
                 data = json.loads(message)
                 await self.consume(data)
-                if self.should_stop():
+                if await self.should_stop():
                     await self.end()
                     break
