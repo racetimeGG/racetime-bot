@@ -350,6 +350,40 @@ class RaceHandler:
             'user': user
         })
 
+    async def pin_message(self, message):
+        """
+        Pin a chat message.
+
+        `message` should be the hashid of the message.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'pin_message',
+            'data': {
+                'message': message,
+            }
+        }))
+        self.logger.info('[%(race)s] pinned chat message %(message)s' % {
+            'race': self.data.get('name'),
+            'message': message
+        })
+
+    async def unpin_message(self, message):
+        """
+        Unpin a chat message.
+
+        `message` should be the hashid of the message.
+        """
+        await self.ws.send(json.dumps({
+            'action': 'unpin_message',
+            'data': {
+                'message': message,
+            }
+        }))
+        self.logger.info('[%(race)s] unpinned chat message %(message)s' % {
+            'race': self.data.get('name'),
+            'message': message
+        })
+
     async def handle(self):
         """
         Low-level handler for the race room. This will loop over the websocket,
