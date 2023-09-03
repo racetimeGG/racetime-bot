@@ -135,16 +135,27 @@ class RaceHandler:
         """
         self.data = data.get('race')
 
-    async def send_message(self, message):
+    async def send_message(self, message, actions=None, pinned=False):
         """
         Send a chat message to the race room.
 
         `message` should be the message string you want to send.
+        `actions` should be a list of Action objects (or raw dict data, if you're bold).
+        `pinned` will pin the message at the top of the chat window.
+
+        Note: for more info on setting up race actions, see `msg_actions.py`
         """
+        if actions and not isinstance(actions, dict):
+            # Assume actions is a list of Action objects
+            actions = {
+                action.label: action.data for action in actions
+            }
         await self.ws.send(json.dumps({
             'action': 'message',
             'data': {
                 'message': message,
+                'actions': actions,
+                'pinned': pinned,
                 'guid': str(uuid.uuid4()),
             }
         }))
