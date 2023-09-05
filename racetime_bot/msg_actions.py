@@ -81,7 +81,7 @@ class Question:
         if default:
             self.data['default'] = default
         if help_text:
-            self.data['help_text'] = help_text
+            self.data['help'] = help_text
 
 
 class TextInput(Question):
