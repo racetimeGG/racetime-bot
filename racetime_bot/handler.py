@@ -135,13 +135,14 @@ class RaceHandler:
         """
         self.data = data.get('race')
 
-    async def send_message(self, message, actions=None, pinned=False):
+    async def send_message(self, message, actions=None, pinned=False, direct_to=None):
         """
         Send a chat message to the race room.
 
         `message` should be the message string you want to send.
         `actions` should be a list of Action objects (or raw dict data, if you're bold).
         `pinned` will pin the message at the top of the chat window.
+        `direct_to` will send message as DM to the specified user ID.
 
         Note: for more info on setting up race actions, see `msg_actions.py`
         """
@@ -150,10 +151,13 @@ class RaceHandler:
             actions = {
                 action.label: action.data for action in actions
             }
+        if direct_to and (actions or pinned):
+            raise Exception('Cannot DM a message with actions or pin')
         await self.ws.send(json.dumps({
             'action': 'message',
             'data': {
                 'message': message,
+                'direct_to': direct_to,
                 'actions': actions,
                 'pinned': pinned,
                 'guid': str(uuid.uuid4()),
