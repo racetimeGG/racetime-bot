@@ -105,10 +105,19 @@ class Bot:
         it.
         """
         connect_kwargs = {
-            'extra_headers': {
+            'additional_headers': {
                 'Authorization': 'Bearer ' + self.access_token,
             },
         }
+
+        # BC for websockets<14
+        try:
+            ws_version = int(websockets.version.version.split('.')[0])
+        except (AttributeError, TypeError, ValueError):
+            ws_version = 14
+        if ws_version < 14:
+            connect_kwargs['extra_headers'] = connect_kwargs.pop('additional_headers')
+
         if self.ssl_context is not None and self.racetime_secure:
             connect_kwargs['ssl'] = self.ssl_context
         ws_conn = websockets.connect(
