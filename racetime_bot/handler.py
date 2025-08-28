@@ -182,6 +182,17 @@ class RaceHandler:
             'info': info,
         })
 
+    async def set_bot_meta(self, data):
+        await self.ws.send(json.dumps({
+            'action': 'setmeta',
+            'data': data,
+        }))
+
+        self.logger.info('[%(race)s] Set meta: %(data)s' % {
+            'race': self.data.get('name'),
+            'data': json.dumps(data),
+        })
+
     async def set_raceinfo(self, info, overwrite=False, prefix=True):
         """
         Set the `info_user` field on the race room's data.
