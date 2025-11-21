@@ -188,6 +188,8 @@ class RaceHandler:
             'data': data,
         }))
 
+        self.data['bot_meta'] = data
+
         self.logger.info('[%(race)s] Set meta: %(data)s' % {
             'race': self.data.get('name'),
             'data': json.dumps(data),
