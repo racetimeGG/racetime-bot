@@ -133,7 +133,8 @@ class RaceHandler:
         want to react to race changes, you can override this method to add
         further functionality.
         """
-        self.data = data.get('race')
+        if data.get('race', {}).get('version', 1) > self.data.get('version', 0):
+            self.data = data.get('race')
 
     async def send_message(self, message, actions=None, pinned=False, direct_to=None):
         """
