@@ -42,7 +42,7 @@ class Bot:
         self.category_slug = category_slug
         self.ssl_context = ssl_context
 
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
         self.last_scan = None
         self.handlers = {}
         self.races = {}
@@ -51,6 +51,8 @@ class Bot:
         self.client_id = client_id
         self.client_secret = client_secret
         self.access_token, self.reauthorize_every = self.authorize()
+
+        asyncio.set_event_loop(self.loop)
 
     def get_handler_class(self):
         """
